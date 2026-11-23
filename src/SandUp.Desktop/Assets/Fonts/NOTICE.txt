@@ -1,0 +1,6 @@
+Noto Sans SC 2.004, Regular and Bold
+© 2014-2021 Adobe (http://www.adobe.com/).
+
+Licensed under the SIL Open Font License, Version 1.1. See OFL.txt.
+Source: https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/SubsetOTF/SC
+The fonts in this application are distributed as published by the source project.

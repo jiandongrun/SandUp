@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SandUp.Application\SandUp.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Keep the native SQLite patch version independent of the ADO.NET wrapper. -->
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.15" />
+    <PackageReference Include="SQLitePCLRaw.config.e_sqlite3" Version="3.0.5" />
+    <PackageReference Include="SQLite" Version="3.54.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

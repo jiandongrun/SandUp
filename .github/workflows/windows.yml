@@ -1,0 +1,27 @@
+name: Windows build and test
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          global-json-file: global.json
+      - name: Restore locked dependencies
+        run: ./tools/dev.ps1 Restore
+      - name: Build
+        run: ./tools/dev.ps1 Build
+      - name: Test
+        run: ./tools/dev.ps1 Test

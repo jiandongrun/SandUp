@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+artifacts/
+output/
+tmp/
+.vs/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
