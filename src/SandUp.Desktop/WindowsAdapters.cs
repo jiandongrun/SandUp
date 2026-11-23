@@ -95,6 +95,7 @@ public sealed class BreakOverlayHost(Dispatcher dispatcher,Action<Exception>? re
     private static readonly ActivityDefinition[] Prompts = new BuiltinActivityCatalog().List().Where(a => a.PromptId is not null).ToArray();
     private readonly Dictionary<Guid,List<Surface>> batches = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid,byte> invalidated = new();
+    internal TimeSpan ShowTimeout { get; init; } = TimeSpan.FromSeconds(2);
     private event Action<OverlayAction>? Actions;
     public IDisposable SubscribeActions(Action<OverlayAction> callback) { Actions += callback; return new Subscription(() => Actions -= callback); }
     public async Task<OverlayResult> ShowAsync(OverlayRequest request, CancellationToken cancellation)
@@ -104,14 +105,15 @@ public sealed class BreakOverlayHost(Dispatcher dispatcher,Action<Exception>? re
         try
         {
             var deadline = Stopwatch.StartNew();
-            var rendered = await dispatcher.InvokeAsync(() => Create(request), DispatcherPriority.Normal, cancellation).Task.WaitAsync(TimeSpan.FromSeconds(2), cancellation).ConfigureAwait(false);
-            await Task.WhenAll(rendered).WaitAsync(TimeSpan.FromMilliseconds(Math.Max(1,2000-deadline.ElapsedMilliseconds)), cancellation).ConfigureAwait(false);
+            TimeSpan Remaining() => TimeSpan.FromMilliseconds(Math.Max(1, ShowTimeout.TotalMilliseconds - deadline.ElapsedMilliseconds));
+            var rendered = await dispatcher.InvokeAsync(() => Create(request), DispatcherPriority.Normal, cancellation).Task.WaitAsync(ShowTimeout, cancellation).ConfigureAwait(false);
+            await Task.WhenAll(rendered).WaitAsync(Remaining(), cancellation).ConfigureAwait(false);
             return await dispatcher.InvokeAsync(() =>
             {
                 if(invalidated.ContainsKey(request.BatchId) || !batches.TryGetValue(request.BatchId,out var windows) || windows.Any(w=>!w.Window.IsVisible))
                     return new OverlayResult(request.BatchId, [], request.Displays.Select(d=>d.DisplayId).ToArray(), false, ErrorCode.OverlayUnavailable);
                 return new OverlayResult(request.BatchId, request.Displays.Select(d=>d.DisplayId).ToArray(), [], true, null);
-            }, DispatcherPriority.Normal, cancellation).Task.WaitAsync(TimeSpan.FromMilliseconds(Math.Max(1,2000-deadline.ElapsedMilliseconds)), cancellation).ConfigureAwait(false);
+            }, DispatcherPriority.Normal, cancellation).Task.WaitAsync(Remaining(), cancellation).ConfigureAwait(false);
         }
         catch (Exception error) { CloseAll(request.BatchId, OverlayCloseReason.Failure); try{reportFailure?.Invoke(error);}catch{} return new(request.BatchId, [], request.Displays.Select(d=>d.DisplayId).ToArray(), false, ErrorCode.OverlayUnavailable); }
     }

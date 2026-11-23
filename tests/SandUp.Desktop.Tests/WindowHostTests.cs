@@ -1,5 +1,6 @@
 using SandUp.Application;
 using SandUp.Desktop;
+using SandUp.Domain;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Controls;
@@ -10,6 +11,10 @@ namespace SandUp.Desktop.Tests;
 [Collection("Desktop windows")]
 public sealed class WindowHostTests
 {
+    // These lifecycle tests exercise actual WPF windows on shared Windows runners.
+    // BlockedDispatcherTimesOutAndLateCreationCannotShowAWindow uses the production deadline.
+    private static readonly TimeSpan LifecycleWindowTimeout = TimeSpan.FromSeconds(10);
+
     [Fact]
     public async Task RealWindowsCloseAndRejectInvalidatedOrPreCancelledBatches()
     {
@@ -17,7 +22,8 @@ public sealed class WindowHostTests
         var thread=new Thread(()=>
         {
             var dispatcher=Dispatcher.CurrentDispatcher;
-            var errors=new List<Exception>();var host=new BreakOverlayHost(dispatcher,errors.Add);
+            var errors=new List<Exception>();
+            var host=new BreakOverlayHost(dispatcher,errors.Add) { ShowTimeout = LifecycleWindowTimeout };
             dispatcher.BeginInvoke(async()=>
             {
                 try
@@ -64,7 +70,7 @@ public sealed class WindowHostTests
         {
             var dispatcher=Dispatcher.CurrentDispatcher;
             var history = new PreviewHistory();
-            var host=new BreakOverlayHost(dispatcher, history: history);
+            var host=new BreakOverlayHost(dispatcher, history: history) { ShowTimeout = LifecycleWindowTimeout };
             var received=new List<OverlayAction>();using var subscription=host.SubscribeActions(received.Add);
             dispatcher.BeginInvoke(async()=>
             {
@@ -226,6 +232,7 @@ public sealed class WindowHostTests
                 new HashSet<OverlayActionKind>{OverlayActionKind.EmergencyExit});
             var result=await host.ShowAsync(request,CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(4));
             Assert.False(result.AllShown);
+            Assert.Equal(ErrorCode.OverlayUnavailable, result.Error);
             release.Set();
             // Queued creation is processed before this idle-priority inspection.
             await ui.InvokeAsync(()=>Assert.DoesNotContain(PresentationSource.CurrentSources.Cast<PresentationSource>(),
