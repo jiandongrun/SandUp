@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace SandUp.Desktop;
 
@@ -44,6 +46,9 @@ public sealed class HourglassView : FrameworkElement
     private readonly RotateTransform companionRightArm = CompanionArtwork.CreateArm();
     private readonly ScaleTransform companionEyes = new(1, 1, CompanionArtwork.CenterX, CompanionArtwork.EyeCenterY);
     private AnimationClock? companionWaveClock;
+    private readonly SandSlosh slosh = new();
+    private readonly DispatcherTimer sloshTimer;
+    private long lastSloshUpdate;
 
     public double TurnAngle
     {
@@ -60,7 +65,54 @@ public sealed class HourglassView : FrameworkElement
         set => SetValue(CompanionProgressProperty, value);
     }
 
-    public HourglassView() => IsVisibleChanged += (_, _) => UpdateGrainAnimation();
+    public HourglassView()
+    {
+        sloshTimer = new(DispatcherPriority.Render, Dispatcher) { Interval = TimeSpan.FromSeconds(1d / 30) };
+        sloshTimer.Tick += (_, _) => UpdateSlosh();
+        IsVisibleChanged += (_, _) =>
+        {
+            UpdateGrainAnimation();
+            if (!IsVisible) StopSlosh();
+        };
+    }
+
+    internal void MoveSand(Vector distance)
+    {
+        if (!IsVisible || !SystemParameters.ClientAreaAnimation ||
+            !double.IsFinite(distance.X) || !double.IsFinite(distance.Y) || distance.LengthSquared == 0) return;
+
+        var now = Stopwatch.GetTimestamp();
+        var previous = slosh.Surface;
+        if (sloshTimer.IsEnabled) slosh.Advance(Stopwatch.GetElapsedTime(lastSloshUpdate, now));
+        lastSloshUpdate = now;
+        slosh.Push(distance);
+        sloshTimer.Start();
+        if (slosh.Surface != previous) InvalidateVisual();
+    }
+
+    private void UpdateSlosh()
+    {
+        if (!SystemParameters.ClientAreaAnimation)
+        {
+            StopSlosh();
+            return;
+        }
+
+        var now = Stopwatch.GetTimestamp();
+        var previous = slosh.Surface;
+        slosh.Advance(Stopwatch.GetElapsedTime(lastSloshUpdate, now));
+        lastSloshUpdate = now;
+        if (!slosh.Moving) sloshTimer.Stop();
+        if (slosh.Surface != previous) InvalidateVisual();
+    }
+
+    private void StopSlosh()
+    {
+        if (!sloshTimer.IsEnabled) return;
+        sloshTimer.Stop();
+        slosh.Reset();
+        InvalidateVisual();
+    }
 
     public void SetSand(double remainingFraction, bool isRunning)
     {
@@ -124,7 +176,7 @@ public sealed class HourglassView : FrameworkElement
         var lift = growth > 0 ? Math.Max(0, CompanionArtwork.BootBottomInGlass(growth) - WhiteBaseY) : 0;
         if (lift > 0) dc.PushTransform(new TranslateTransform(0, -lift));
         var angle = TurnAngle;
-        if (angle == 0 && !Turning && !Running)
+        if (angle == 0 && !Turning && !Running && slosh.Surface == default)
             dc.DrawDrawing(RestingArtwork);
         else
             DrawActiveHourglass(dc, angle);
@@ -159,9 +211,9 @@ public sealed class HourglassView : FrameworkElement
         var transfer = Turning ? SmoothStep((angle - 153) / 27) : 1;
         var sourceFraction = Turning || angle >= 90 ? 1 - (1 - RemainingFraction) * transfer : 1;
         var tilt = Math.Cos(angle * Math.PI / 180);
-        DrawChamberSand(dc, source, sourceFraction, Math.Max(0, tilt), 0);
+        DrawChamberSand(dc, source, sourceFraction, Math.Max(0, tilt), 0, motion: slosh.Surface);
         var streamOpacity = Running ? transfer * Math.Min(1, RemainingFraction * 24) : 0;
-        DrawChamberSand(dc, receiver, 1 - sourceFraction, Math.Max(0, -tilt), streamOpacity, (double)GetValue(GrainPhaseProperty));
+        DrawChamberSand(dc, receiver, 1 - sourceFraction, Math.Max(0, -tilt), streamOpacity, (double)GetValue(GrainPhaseProperty), slosh.Surface);
         dc.DrawDrawing(GetReflections(receiver, source));
 
         dc.PushTransform(receiver);
@@ -303,23 +355,33 @@ public sealed class HourglassView : FrameworkElement
         return 0;
     }
 
-    private static void DrawChamberSand(DrawingContext dc, RotateTransform chamber, double amount, double pile, double streamOpacity, double grainPhase = 0)
+    private static void DrawChamberSand(DrawingContext dc, RotateTransform chamber, double amount, double pile, double streamOpacity, double grainPhase = 0, Vector motion = default)
     {
         if (amount <= 0 && streamOpacity <= 0) return;
         Span<Point> outline = stackalloc Point[ChamberOutline.Length];
         var transform = chamber.Value;
-        for (var i = 0; i < outline.Length; i++) outline[i] = transform.Transform(ChamberOutline[i]);
+        var slope = motion.X;
+        double Tilt(double x) => (x - Neck.X) * slope;
+        // Shear the chamber so the horizontal area calculation also works for a tilted surface.
+        for (var i = 0; i < outline.Length; i++)
+        {
+            var point = transform.Transform(ChamberOutline[i]);
+            outline[i] = new Point(point.X, point.Y - Tilt(point.X));
+        }
         var level = FindSandLevel(outline, amount * .70, out var floor);
-        var peak = Math.Min(7, (floor - level) * .55) * pile;
+        var depth = floor - level;
+        var peak = Math.Min(7, depth * .55) * pile + motion.Y * Math.Min(18, depth * .25);
+        var crest = Neck.X - slope * 26;
+        Point SandPoint(double x, double height = 0) => new(x, level + Tilt(x) - height);
         var surface = new StreamGeometry();
         using (var path = surface.Open())
         {
-            path.BeginFigure(new Point(-48, level), true, true);
-            path.BezierTo(new Point(12, level), new Point(34, level - peak), new Point(48, level - peak), true, false);
-            path.BezierTo(new Point(62, level - peak), new Point(84, level), new Point(144, level), true, false);
+            path.BeginFigure(SandPoint(-48), true, true);
+            path.BezierTo(SandPoint(12), SandPoint(crest - 14, peak), SandPoint(crest, peak), true, false);
+            path.BezierTo(SandPoint(crest + 14, peak), SandPoint(84), SandPoint(144), true, false);
             path.LineTo(new Point(144, 160), false, false);
             path.LineTo(new Point(-48, 160), false, false);
-            path.LineTo(new Point(-48, level), false, false);
+            path.LineTo(SandPoint(-48), false, false);
         }
 
         // Clip to the turned glass, then draw in screen coordinates so gravity stays vertical.
@@ -334,7 +396,7 @@ public sealed class HourglassView : FrameworkElement
             for (var i = 0; i < 48; i++)
             {
                 var x = 9 + i * 23 % 78;
-                var y = level - 7 + i * 17 % 48;
+                var y = level + Tilt(x) - 7 + i * 17 % 48;
                 dc.DrawEllipse(i % 2 == 0 ? LightGrain : DarkGrain, null, new Point(x, y), .85, .6);
             }
             dc.Pop();

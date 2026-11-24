@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -45,6 +46,7 @@ public sealed class FloatingClockPresenter:IDisposable
     private bool closingWarning,disposed;
     private bool memoDismissalPending;
     private bool hovered;
+    private Point? dragLocation;
     private int flipGeneration;
     private int companionGeneration;
     private bool companionShown, companionReady, companionBothHands, retractingForRest;
@@ -74,15 +76,61 @@ public sealed class FloatingClockPresenter:IDisposable
         // Transparent room around the glyph keeps the 180-degree turn from clipping.
         var surface=new Grid();surface.Children.Add(glyph);
         floating=new Window{Title=$"{AppBranding.DisplayName} · 悬浮沙漏",Icon=AppBranding.WindowIcon,FontFamily=UiTypography.Family,Content=surface,Width=FloatingSize,Height=FloatingSize,WindowStyle=WindowStyle.None,ResizeMode=ResizeMode.NoResize,AllowsTransparency=true,Background=Brushes.Transparent,Topmost=true,ShowInTaskbar=false,ShowActivated=false};
-        var menu=new ContextMenu{FontFamily=UiTypography.Family};UiTheme.AddControls(menu);var open=new MenuItem{Header="打开沙立"};open.Click+=(_,_)=>openMain();menu.Items.Add(open);
-        var hide=new MenuItem{Header="隐藏悬浮沙漏"};hide.Click+=(_,_)=>SetEnabled(false);menu.Items.Add(hide);floating.ContextMenu=menu;
-        floating.MouseLeftButtonDown+=async(_,e)=>{if(e.ClickCount==2){openMain();return;}floating.DragMove();ClampToDesktop(floating);preferences=preferences with{Left=floating.Left,Top=floating.Top};await SavePreferences();};
+        var menu = new ContextMenu
+        {
+            FontFamily = UiTypography.Family,
+            Placement = PlacementMode.Right,
+            PlacementTarget = surface
+        };
+        UiTheme.AddControls(menu);
+        menu.SetResourceReference(FrameworkElement.StyleProperty, "FloatingContextMenu");
+        var open = new MenuItem { Header = "打开沙立" };
+        open.Click += (_, _) => openMain();
+        var hide = new MenuItem { Header = "隐藏悬浮沙漏" };
+        hide.Click += (_, _) => SetEnabled(false);
+        menu.Items.Add(open);
+        menu.Items.Add(hide);
+        floating.ContextMenu = menu;
+        floating.IsVisibleChanged += (_, _) =>
+        {
+            if (!floating.IsVisible) menu.IsOpen = false;
+        };
+        floating.MouseLeftButtonDown += DragFloatingWindow;
         floating.Closing+=(_,e)=>{if(!disposed){e.Cancel=true;SetEnabled(false);}};
-        floating.LocationChanged += (_, _) => PositionWarning();
+        floating.LocationChanged += (_, _) =>
+        {
+            if (dragLocation is { } previous)
+            {
+                var current = new Point(floating.Left, floating.Top);
+                dragLocation = current;
+                hourglass.MoveSand(current - previous);
+            }
+            PositionWarning();
+        };
         floating.Left=preferences.Left??(SystemParameters.WorkArea.Right-floating.Width-20);
         floating.Top=preferences.Top??(SystemParameters.WorkArea.Bottom-floating.Height-20);ClampToDesktop(floating);
         subscription=app.SubscribeSnapshots(_=>dispatcher.BeginInvoke(()=>{if(!disposed)Render(app.ReadSnapshot());}));Render(app.ReadSnapshot());
     }
+
+    private async void DragFloatingWindow(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            openMain();
+            return;
+        }
+        if (e.LeftButton != MouseButtonState.Pressed || dragLocation.HasValue) return;
+
+        dragLocation = new Point(floating.Left, floating.Top);
+        try { floating.DragMove(); }
+        finally { dragLocation = null; }
+        if (disposed) return;
+
+        ClampToDesktop(floating);
+        preferences = preferences with { Left = floating.Left, Top = floating.Top };
+        await SavePreferences();
+    }
+
     public void SetEnabled(bool enabled)
     {
         if(disposed)return;preferences=preferences with{Enabled=enabled};Render(app.ReadSnapshot());EnabledChanged?.Invoke(enabled);_=SavePreferences();

@@ -9,7 +9,7 @@ SandUp 是一款会挥手提醒你休息的 Windows 番茄钟。工作快结束�
 
 ## 下载与使用
 
-当前版本为 **v1.17.24**，适用于 Windows x64。下载后，将 `SandUp.exe` 与同版 `SandUp-Licenses.txt` 放在同一目录，双击程序即可运行。试用版未数字签名，已验证的项目和实机验收范围见 [测试版状态](docs/release-status.md)。[下载 Windows 试用版](https://github.com/jiandongrun/SandUp/releases)
+当前源码版本为 **v1.17.27**，适用于 Windows x64。下载后，将 `SandUp.exe` 与同版 `SandUp-Licenses.txt` 放在同一目录，双击程序即可运行。试用版未数字签名，验证情况见 [测试版状态](docs/release-status.md)。[下载 GitHub 上的 Windows 试用版](https://github.com/jiandongrun/SandUp/releases)
 
 工作和休息计划可在设置页修改。开机自启动默认关闭。用户数据位于 `%LOCALAPPDATA%\HealthyWorkClock`。更多操作见 [使用说明](docs/user-guide.md)。
 

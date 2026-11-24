@@ -199,7 +199,7 @@ public sealed class PageNavigationTests
                     await dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
                     Assert.Equal(64, Visible<TextBlock>().Single(t => t.Text == "25:00").FontSize);
                     Assert.Equal(20, Visible<TextBlock>().Single(t => t.Text == "准备好后，开始一轮").FontSize);
-                    var parts = new[] { "眼睛", "肩颈", "腰背", "腹部", "臀腿", "肛门·前列腺" };
+                    var parts = new[] { "眼睛", "肩颈", "腰背", "腹部", "臀腿", "肛门" };
                     var bars = Visible<ProgressBar>();
                     Assert.Equal(12, bars.Length);
                     Assert.Equal(new double[] { 75, 50, 65, 70, 25, 80 }, bars.Where((_, index) => index % 2 == 0).Select(b => b.Value));

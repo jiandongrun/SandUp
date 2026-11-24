@@ -11,7 +11,7 @@
 | 腰背 | 8 | 避免长时间维持同一姿势 | 椎间盘损伤率、分钟级恢复率 |
 | 腹部 | 3 | 关注长期活动习惯与久坐分布 | 一小时增加的腹脂、休息后脂肪清零 |
 | 臀腿 | 9 | 中断久坐与下肢活动 | 臀肌萎缩速度、全腿统一损耗 |
-| 肛门/前列腺 | 2 | 舒适提醒须与具体症状区分 | 痔、前列腺炎与排尿症状共用风险值 |
+| 肛门 | 2 | 提醒换姿势、短暂离座 | 痔的风险值或每小时损伤量 |
 
 WHO建议限制久坐，以任何强度的身体活动替代部分久坐时间；没有给出六部位损耗排序或适用于所有人的统一休息间隔。研究中的休息方案是被测试的条件，不等于已经证明最佳的日常剂量。[WHO《身体活动和久坐行为指南》，2020](https://www.who.int/publications-detail-redirect/9789240015128)；[建议与证据正文](https://www.ncbi.nlm.nih.gov/sites/books/NBK566046/)
 
@@ -51,17 +51,9 @@ Peery等对2813名接受结肠镜检查者的横断面研究中，1074人被记�
 
 ASCRS指南与AGA临床更新讨论排便习惯、用力以及马桶停留时间；这些内容不能转换为普通办公椅上的每小时损伤量。现有资料不足以支持肛门2点/小时，日常办公剂量的高质量纵向证据仍有限。[ASCRS痔管理指南，2024](https://www.ascrsu.com/ascrs/view/ASCRS-Toolkit/2851101/all/Management_of_Hemorrhoids__2024_)；[AGA痔诊疗临床更新，2026](https://gastro.org/clinical-guidance/diagnosis-and-treatment-of-hemorrhoids/)
 
-## 前列腺/盆腔：不同疾病与症状须分开
-
-Zhang等分析20918名男性的HPFS队列，689人达到慢性前列腺炎/慢性盆腔疼痛综合征（CP/CPPS）的疼痛评分阈值。较高运动量与较低风险相关，但电视久坐与CP/CPPS无显著关联（趋势p=0.64）。这项研究的暴露不是办公坐姿，结局也不等于细菌感染或前列腺组织损伤。[Zhang等，Medicine & Science in Sports & Exercise，2015](https://pubmed.ncbi.nlm.nih.gov/25116086/)
-
-韩国男性队列则发现，每日坐时≥10小时相较<5小时，下尿路症状（LUTS）发生HR为1.15（95%CI 1.06–1.24）。这是长年随访的分组关联，不代表每坐一小时风险增加15%，LUTS也不等于前列腺炎、前列腺增生或癌。美国HPFS的另一项分析也研究了电视时间与LUTS，但它与上述CP/CPPS研究共享队列来源，不能算完全独立的人群复制。[韩国队列，BJU International，2018](https://pubmed.ncbi.nlm.nih.gov/29557554/)；[美国HPFS分析，2020](https://pmc.ncbi.nlm.nih.gov/articles/PMC7403234/)
-
-AUA指南指出，部分慢性盆腔疼痛患者的症状可因久坐或会阴压力加重；症状触发不等于健康人新发疾病的剂量反应。因此，肛门与前列腺不能共用一个医学损耗值，CP/CPPS无关联与LUTS存在关联也并不矛盾。[AUA男性慢性盆腔疼痛指南，2025](https://www.auanet.org/documents/Guidelines/PDF/2025%20Guidelines/CPP%20Unabridged%20041025.pdf)
-
 ## 如何理解这些证据
 
-这是一份定向文献核查，并非系统综述。检索覆盖PubMed、PMC、作者机构稿及WHO、ASCRS、AUA等机构，关键词包括久坐、活动中断、视疲劳、肌骨疼痛、腰围、下肢血管、痔及泌尿症状，并查找无关联或干预无效的结果。部分材料仅核对到摘要，不据此补写全文细节。
+这是一份定向文献核查，并非系统综述。检索覆盖PubMed、PMC、作者机构稿及WHO、ASCRS等机构，关键词包括久坐、活动中断、视疲劳、肌骨疼痛、腰围、下肢血管和痔，并查找无关联或干预无效的结果。部分材料仅核对到摘要，不据此补写全文细节。
 
 短时实验说明特定条件下的即时变化，横断面研究说明同时出现的关联，前瞻队列仍可能受混杂影响。不同人群、暴露定义、结局和时间尺度不能直接相除或拼接成六项损耗比例。程序数值及历史倍率应理解为提醒机制，不能作医学测量解释。
 
@@ -76,4 +68,4 @@ AUA指南指出，部分慢性盆腔疼痛患者的症状可因久坐或会阴�
 | 腰背 | 轻松走一会儿，或选择有支撑的舒适坐姿。NHS 建议尽可能保持活动。计时软件无法从腰痛判断是否存在椎间盘疾病。[NHS《背痛》](https://www.nhs.uk/conditions/back-pain/) · [办公室随机试验](https://pubmed.ncbi.nlm.nih.gov/34450361/) |
 | 腹部 | 起身走动，分散一天中的久坐时间。腰围研究观察人群差异，短时步行试验测量餐后血糖和胰岛素。两类证据都不能换算成个人当日腹脂变化。[WHO 指南](https://www.who.int/publications-detail-redirect/9789240015128) · [腰围研究](https://pubmed.ncbi.nlm.nih.gov/18252901/) · [步行试验](https://pubmed.ncbi.nlm.nih.gov/22374636/) |
 | 臀腿 | 走动让臀部离开坐面。不便站立时可调整坐姿、轻缓抬放脚尖。办公坐压研究测量受力分布，下肢试验测量股动脉血管反应。坐姿动作是舒适选项，步行试验并未验证它有相同效果。[办公坐压研究](https://pubmed.ncbi.nlm.nih.gov/35245695/) · [下肢血管试验](https://pubmed.ncbi.nlm.nih.gov/25137367/) |
-| 肛门·前列腺 | 换姿势、短暂离座。已有慢性盆腔痛者坐着时可能更不舒服。痔病指南区分排便用力、如厕久坐与普通办公坐姿。现有研究不能证明普通办公久坐会直接引起痔或前列腺炎。[痔病研究](https://pubmed.ncbi.nlm.nih.gov/26406337/) · [慢性盆腔痛队列](https://pubmed.ncbi.nlm.nih.gov/25116086/) · [ASCRS 指南，2024](https://www.ascrsu.com/ascrs/view/ASCRS-Toolkit/2851101/all/Management_of_Hemorrhoids__2024_) · [AUA 指南，2025](https://www.auanet.org/documents/Guidelines/PDF/2025%20Guidelines/CPP%20Unabridged%20041025.pdf) |
+| 肛门 | 换姿势、短暂离座。痔病指南讨论排便用力和如厕时长。目前证据不足以认定普通办公久坐会引起痔。[痔病研究](https://pubmed.ncbi.nlm.nih.gov/26406337/) · [ASCRS 指南，2024](https://www.ascrsu.com/ascrs/view/ASCRS-Toolkit/2851101/all/Management_of_Hemorrhoids__2024_) |

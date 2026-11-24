@@ -13,7 +13,7 @@ internal static class BodyPartDisplay
         BodyPart.Back => "腰背",
         BodyPart.Abdomen => "腹部",
         BodyPart.Legs => "臀腿",
-        BodyPart.Pelvic => "肛门·前列腺",
+        BodyPart.Pelvic => "肛门",
         _ => throw new ArgumentOutOfRangeException(nameof(part))
     };
 }

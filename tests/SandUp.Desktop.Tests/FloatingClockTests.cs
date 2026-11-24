@@ -14,6 +14,99 @@ namespace SandUp.Desktop.Tests;
 [Collection("Desktop windows")]
 public class FloatingClockTests
 {
+    [Fact]
+    public void SandResistsSmallMovesAndSettlesAfterOneSlip()
+    {
+        var slosh = new SandSlosh();
+        var frame = TimeSpan.FromMilliseconds(1000d / 30);
+        for (var i = 0; i < 10; i++)
+        {
+            slosh.Push(new Vector(2, -2));
+            slosh.Advance(frame);
+            Assert.Equal(default, slosh.Surface);
+        }
+
+        slosh.Push(new Vector(80, -80));
+        var peak = slosh.Surface;
+        Assert.Equal(SandSlosh.MaximumSlope, peak.X);
+        Assert.InRange(peak.Y, -.05, -.03);
+
+        slosh.Advance(frame);
+        Assert.Equal(peak, slosh.Surface);
+        for (var i = 0; i < 10; i++)
+        {
+            var previous = slosh.Surface;
+            slosh.Advance(frame);
+            Assert.InRange(slosh.Surface.X, 0, previous.X);
+            Assert.InRange(slosh.Surface.Y, previous.Y, 0);
+        }
+
+        Assert.False(slosh.Moving);
+        Assert.Equal(default, slosh.Surface);
+    }
+
+    [Fact]
+    public async Task MenuHasDarkRowsOpensBesideHourglassAndRoutesActions()
+    {
+        var finished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            var dispatcher = Dispatcher.CurrentDispatcher;
+            dispatcher.BeginInvoke(async () =>
+            {
+                try
+                {
+                    var openCount = 0;
+                    using var ui = new FloatingClockPresenter(new AppStub(), dispatcher, null, () => openCount++);
+                    var window = ui.FloatingWindow;
+                    window.Left = SystemParameters.WorkArea.Left + 120;
+                    window.Top = SystemParameters.WorkArea.Top + 120;
+                    var menu = window.ContextMenu;
+                    menu.IsOpen = true;
+                    await dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+
+                    var panel = Assert.IsType<Border>(menu.Template.FindName("MenuPanel", menu));
+                    Assert.Same(UiTheme.Raised, panel.Background);
+                    var actions = menu.Items.Cast<MenuItem>().ToArray();
+                    Assert.Equal(new[] { "打开沙立", "隐藏悬浮沙漏" }, actions.Select(item => item.Header));
+                    Assert.All(actions, item => Assert.IsType<Border>(item.Template.FindName("MenuRow", item)));
+
+                    var content = Assert.IsAssignableFrom<FrameworkElement>(window.Content);
+                    void AssertBesideHourglass()
+                    {
+                        var floatLeft = content.PointToScreen(new Point()).X;
+                        var floatRight = content.PointToScreen(new Point(content.ActualWidth, 0)).X;
+                        var menuLeft = menu.PointToScreen(new Point()).X;
+                        var menuRight = menu.PointToScreen(new Point(menu.ActualWidth, 0)).X;
+                        Assert.True(menuRight <= floatLeft + 2 || menuLeft >= floatRight - 2);
+                    }
+                    AssertBesideHourglass();
+
+                    menu.IsOpen = false;
+                    window.Left = SystemParameters.WorkArea.Right - window.Width - 6;
+                    window.Top = SystemParameters.WorkArea.Bottom - window.Height - 6;
+                    menu.IsOpen = true;
+                    await dispatcher.InvokeAsync(() => { }, DispatcherPriority.ApplicationIdle);
+                    AssertBesideHourglass();
+
+                    actions[0].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                    Assert.Equal(1, openCount);
+                    actions[1].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                    Assert.False(ui.Enabled);
+                    Assert.False(window.IsVisible);
+                    Assert.False(menu.IsOpen);
+                    finished.SetResult();
+                }
+                catch (Exception error) { finished.SetException(error); }
+                finally { dispatcher.BeginInvokeShutdown(DispatcherPriority.Background); }
+            });
+            Dispatcher.Run();
+        }) { IsBackground = true };
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        await finished.Task.WaitAsync(TimeSpan.FromSeconds(30));
+    }
+
     [Theory]
     [InlineData(20001,false,false)] [InlineData(20000,true,false)] [InlineData(10001,true,false)]
     [InlineData(10000,true,true)] [InlineData(1,true,true)] [InlineData(0,false,false)]
